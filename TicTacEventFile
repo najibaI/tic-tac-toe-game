@@ -1,0 +1,264 @@
+// Import the neccesary libraries that are required for the program.
+import javax.swing.*;
+import java.awt.event.*;
+import java.awt.*;
+
+// Creates a class that responds to mouse and keyboard input by “listening.”
+public class TicTacEvent implements ItemListener, ActionListener, Runnable {
+    TicTac gui;  // associates the game board with the event
+    Thread playing;  // created to check for a winner
+    
+    ImageIcon a = new ImageIcon("kitten.jpg");  // image icon for kitten
+    ImageIcon b = new ImageIcon("puppy.jpg");  // image icon for puppy
+    
+    // Declare and initialize constants:
+    int KITTEN = 1;
+    int PUPPY = 2;
+    
+    // Declare and initialize the global variables:
+    
+    int clicks = 0;  // initialize the number of clicks to 0
+    boolean win = false;  // initialize the number of wins to 0
+    int kittenWin = 0;  // initialize the number of kitten wins to 0
+    int puppyWin = 0;  // initialize the number of puppy wins to 0
+    int tie = 0; // initialize the number of ties to 0
+    int[][] check = new int[3][3];  // creates a 3 x 3 check array to see if 
+                                    // someone has won or not
+
+    public TicTacEvent (TicTac in){  // associates the two files to be used together
+        gui = in;
+        // This loop initiates the winner check array
+        for (int row=0; row<=2; row++){
+           for (int col=0; col<=2; col++){
+               check[row][col] = 0;
+           }
+       }
+    }
+    
+    public void actionPerformed (ActionEvent event) {  // tells the program what to do when a button is clicked
+        String command = event.getActionCommand();  // takes the button name as input from the button that is clicked
+
+        // If and else if structures checks the command variable and calls the appropriate method.
+        
+        if (command.equals("Play")) {
+            startPlaying();
+        }
+        else if (command.equals("Reset")) {
+            restartGame();
+        }
+        else if (command.equals("1")) {
+            gridButtonPress(0, 0);
+        }
+        else if (command.equals("2")) {
+            gridButtonPress(0, 1);
+        }
+        else if (command.equals("3")) {
+            gridButtonPress(0, 2);
+        }
+        else if (command.equals("4")) {
+            gridButtonPress(1, 0);
+        }
+        else if (command.equals("5")) {
+            gridButtonPress(1, 1);
+        }
+        else if (command.equals("6")) {
+            gridButtonPress(1, 2);
+        }
+        else if (command.equals("7")) {
+            gridButtonPress(2, 0);
+        }
+        else if (command.equals("8")) {
+            gridButtonPress(2, 1);
+        }
+        else if (command.equals("9")) {
+            gridButtonPress(2, 2);
+        }
+    }
+
+    /**
+    * @param row takes any row (0-2) of the tic tac toe game.
+    * @param col takes any column (0-2) of the tic tac toe game.
+    * This method checks to see if a button was pressed.
+    */
+    
+    private void gridButtonPress(int row, int col) {
+        if (check[row][col] == 0) {
+            clicks += 1;  // keeps track of the number of boxes chosen
+
+            // puts a kitten on the board and declares that square to be taken
+            if ((clicks % 2) == 1){
+                gui.boxes[row][col].setIcon(a);
+                check[row][col] = KITTEN;
+            } 
+
+            // puts a puppy on the board and declares that square to be taken
+            else {
+                gui.boxes[row][col].setIcon(b);
+                check[row][col] = PUPPY;
+            }
+
+            winner(); // Checks if there's a winner
+        }
+        
+        // else: do nothing
+    }
+    
+    /**
+     * No parameters.
+     * This method allows the user to play the game.
+     */
+    
+    void startPlaying() {
+        playing = new Thread(this);  // executes the program
+        playing.start();  // starts the game
+        gui.play.setEnabled(false);  // disables the play button
+        
+        resetBoard();
+    }
+    
+    /**
+     * No parameters.
+     * This method resets the board's display and values so that the user can
+     * click on the 3 by 3 buttons again.
+     */
+    
+    private void resetBoard() {
+        resetBoardDisplay(); 
+        resetBoardValues();
+    }
+
+    /**
+     * No parameters.
+     * This method resets the board display by flipping all the cards back 
+     * and enabling the buttons.
+     */
+    
+    private void resetBoardDisplay() {
+        for (int row = 0; row <= 2; row++) {  // for all the three rows and..
+            for (int col = 0; col <= 2; col++) {   // ..for all the three columns...
+                gui.boxes[row][col].setIcon(gui.cardback);
+                gui.boxes[row][col].setEnabled(true);  // ..enable the buttons on the GridLayout
+            }
+        }  
+    }
+    
+    /**
+     * No parameters.
+     * This method resets the board values to 0 (or false if it's a boolean).
+     */
+    
+    private void resetBoardValues() {
+        clicks = 0;  // reset the number of clicks to 0
+        win = false;  // reset the win variable to false
+        
+        /** This loop initiates the winner check array. 
+           (resets the checks to 0 so that the player can take any square 
+            when they start the game again)
+         */
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                check [row][col] = 0;
+            }
+        }
+    }
+    
+    /**
+     * No parameters.
+     * This method allows the user to play the game again.
+     */
+    
+    void restartGame() {
+        gui.reset.setEnabled(true); // enables the reset button
+        resetBoard(); 
+    }
+   
+    @Override
+    public void itemStateChanged(ItemEvent e) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void run() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    /**
+     * No parameters.
+     * This method checks to see if there is a winner or a tie.
+     */
+    
+    private void winner() {
+        for (int row = 0; row < 3; row++){  // for all the 3 rows...
+            if ((check[row][0] == check[row][1])&&(check[row][0] == check[row][2])) {  // this checks the row wins
+                if (check[row][0]== KITTEN) {  // checks to see if the kitten won in a row
+                    
+                    // Display the winner message in the little window panel
+                    JOptionPane.showMessageDialog(null, "Little Kitten is the winner!\nClick Reset to play again.");
+                    win = true;
+                    kittenWin += 1;  // increments the kitten score by 1 each time kitten wins
+                    gui.kittenScore.setText("  Kitten Score: " + kittenWin);  // sets this message in the text field
+                }
+                else if (check[row][0]== PUPPY){  // checks to see if the puppy won in a row
+                    
+                    // Display the winner message in the little window panel
+                    JOptionPane.showMessageDialog(null, "Cute Puppy is the winner!\nClick Reset to play again.");
+                    win = true;
+                    puppyWin += 1;  // increments the puppy score by 1 each time puppy wins
+                    gui.puppyScore.setText("  Puppy Score: " + puppyWin);  // sets this message in the text field
+                }
+            } 
+        }
+        
+        for (int col = 0; col < 3; col++){  // for all the 3 columns...
+            if ((check[0][col] == check[1][col])&&(check[0][col] == check[2][col])) { // this checks the column wins
+                
+                if (check[0][col] == KITTEN) {  // checks to see if the kitten won in a column
+                    
+                    // Display the winner message in the little window panel
+                    JOptionPane.showMessageDialog(null, "Little Kitten is the winner!\nClick Reset to play again.");
+                    win = true;
+                    kittenWin += 1;  // increments the kitten score by 1 each time kitten wins
+                    gui.kittenScore.setText("  Kitten Score: " + kittenWin);  // sets this message in the text field
+                } 
+                else if (check[0][col] == PUPPY) {  // checks to see if the puppy won in a column
+                    
+                    // Display the winner message in the little window panel
+                    JOptionPane.showMessageDialog(null, "Cute Puppy is the winner!\nClick Reset to play again.");
+                    win = true;
+                    puppyWin += 1;  // increments the puppy score by 1 each time puppy wins
+                    gui.puppyScore.setText("  Puppy Score: " + puppyWin);  // sets this message in the text field
+                }
+            }
+        }
+        
+        if (((check[0][0] == check[1][1])&&(check[0][0] == check[2][2]))||
+                ((check[2][0] == check[1][1])&&(check[1][1] == check[0][2]))){  // checks the diagonal wins
+            
+            if (check[1][1] == KITTEN) {  // checks to see if the kitten won diagonally
+                
+                // Display the winner message in the little window panel
+                JOptionPane.showMessageDialog(null, "Little Kitten is the winner!\nClick Reset to play again.");
+                win = true;
+                kittenWin += 1;  // increments the kitten score by 1 each time kitten wins
+                gui.kittenScore.setText("  Kitten Score: " + kittenWin);  // sets this message in the text field
+            } 
+            else if (check[1][1]== PUPPY) { // checks to see if the puppy won diagonally
+                
+                // Display the winner message in the little window panel
+                JOptionPane.showMessageDialog(null, "Cute Puppy is the winner!\nClick Reset to play again.");
+                win = true; 
+                puppyWin += 1;  // increments the puppy score by 1 each time puppy wins
+                gui.puppyScore.setText("  Puppy Score: " + puppyWin);  // sets this message in the text field
+            }
+        }
+        
+        if (!win && clicks == 9) {  // checks to see if there is a tie
+            
+            // Display the tie message in the little window panel
+            JOptionPane.showMessageDialog(null, "The game is a tie!\nClick Reset to play again.");
+            tie += 1;  // increments the tie count by 1 each time a tie happens
+            gui.tieCount.setText("  Tie Count: " + tie);  // sets this message in the text field
+        }
+    }
+}
+
